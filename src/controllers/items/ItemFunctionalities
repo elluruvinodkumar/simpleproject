@@ -1,0 +1,159 @@
+const userDb = require('../user/userDbQueries');
+const documentDb = require('./itemsDbQueries');
+const statusCodes = require('../../helpers/statusCodes');
+const AWS = require("aws-sdk");
+
+const Logger = require('../../../config/console');
+const logger = new Logger().log();
+
+AWS.config.update({
+  secretAccessKey: 'nbu7aSmG3/eQYdWWeAHXdft+x9iSDbmsst4nsZWC',
+  accessKeyId: 'AKIAZYR6NQDXEG4WXJVL',
+  region: 'us-east-2'
+});
+
+const s3 = new AWS.S3();
+
+const handleFileUpload = async (req, res, callback) => {
+
+    if (req.file === undefined || req.file === null) {
+        res.send({
+            status: '400',
+            message: "Please attach a valid file"
+          });
+    } 
+    else {
+      const checkUser = await userDb.getUserQueryFromUserId(req.body.emailId);
+
+      if(checkUser){
+
+        if(checkUser.verified === true){
+          const { originalname, buffer } = req.file;
+   
+          let params = {
+            Bucket: 'aws-s3-fileupload',
+            Key: originalname,
+            Body: buffer,
+          };
+          
+           s3.upload(params, (err, result) => {
+            if (err) {
+              logger.info(`item upload failed`);
+              res.send({
+                message: "Failed to upload",
+                error: err.message,
+              });
+            }
+            else{
+
+              let params = {
+                emailId:req.body.emailId,
+                title:req.body.title,
+                description:req.body.description,
+                category:req.body.category,
+                price:req.body.price,
+                pics:result.Location
+              }
+              let newUser = documentDb.insertItemDetailsTo(params);
+              newUser.save((err) => {
+                  if (err) {
+                      callback({
+                          status: 200,
+                          data: {
+                              response: statusCodes.failure,
+                              message: err
+                          }
+                      });
+                      return
+                  }
+                  callback({
+                      status: 200,
+                      data: {
+                          response: statusCodes.success,
+                          message: "Document saved"
+                      }
+                  });
+              });
+              res.send({
+                  message: "File Uploaded",
+                  result,
+                });
+                logger.info(`item uploaded`);
+
+              // const findUser = documentDb.getAvailableUser(params.emailId);
+              
+                
+              // console.log("user found...",findUser)
+              // if(!findUser){
+
+              //   console.log("user added");
+              //   let newUser = documentDb.insertDocumentDetails(params);
+              //   newUser.save((err) => {
+              //       if (err) {
+              //           callback({
+              //               status: 200,
+              //               data: {
+              //                   response: statusCodes.failure,
+              //                   message: err
+              //               }
+              //           });
+              //           return
+              //       }
+              //       callback({
+              //           status: 200,
+              //           data: {
+              //               response: statusCodes.success,
+              //               message: "Document saved"
+              //           }
+              //       });
+              //   });
+              //   res.send({
+              //       message: "File Uploaded",
+              //       result,
+              //     });
+              // }
+              // else{
+              //   const checkDocument = documentDb.updateDocumentDetails(params);
+              //   if (checkDocument) {
+              //     console.log("user doc updated",checkDocument);
+              //     callback({
+              //         status: 200,
+              //         data: {
+              //             response: statusCodes.success,
+              //             message: "document updated..."
+              //         }
+              //     });
+              //     return;
+              //   }
+              //   else{
+              //     console.log("doc failed to update");
+              //     res.send({
+              //       message: "doc failed to update",
+              //       result,
+              //     });
+              //   }
+
+              // }
+            }     
+          });
+        }
+        else{
+          res.send({
+            status:'200',
+            message: "User need to verify your account",
+          });
+        }
+
+      }
+      else{
+        res.send({
+          status:'200',
+          message: "User don't have account.",
+        });
+      }
+    }
+};
+
+module.exports = {
+  handleFileUpload,
+};

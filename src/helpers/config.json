@@ -1,0 +1,7 @@
+{
+    "secretkey":"simplenodeapp",
+    "stripe_Key":"pk_test_51Jhx4fSJiE8NvXoUE6mzUPCGJmz7hr4GimGnPDTDemhnan2hPSpuzgQQ12teRKkF20FjOmWWUR3vKvwIHwgHOeYV00HMbdsp1b",    
+    "stripe_SECret_KEY":"sk_test_51Jhx4fSJiE8NvXoUCAxiXeC6ewBbXZrDl5RTchIVqQkXpwkXzeBzegcFae5HAT6b1uacW6DAmVAFWWqwxfvVd1EB00pWNrLjPq",
+    "STRIPE_PUBLIC":"pk_test_51IpjLOAsLpLorjLMimsKDphDPo79h9H5yHDOreMvgqSlVbLdHBy2LL7mcQhlyfdaaS8pQX4n09xLVot0uApxrFor00UO2YhVjr"
+
+}
